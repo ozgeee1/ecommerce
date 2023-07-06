@@ -1,0 +1,229 @@
+version: "3.8"
+
+services:
+  configserver:
+    image: oz/configserver
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    mem_limit: 700m
+    ports:
+      - "8071:8071"
+    networks:
+      - ecommerce
+    environment:
+      SPRING_APPLICATION_NAME: configserver
+  eurekaserver:
+    image: oz/eurekaserver
+    build:
+      context: ../../../eurekaserver
+      dockerfile: Dockerfile
+    mem_limit: 700m
+    ports:
+      - "8072:8072"
+    networks:
+      - ecommerce
+    depends_on:
+      - configserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+        max_attempts: 3
+        window: 120s
+    environment:
+      SPRING_APPLICATION_NAME: eurekaserver
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+
+
+
+  usermanagement:
+    image: oz/users
+    build:
+      context: ../../../usermanagement
+      dockerfile: Dockerfile
+    mem_limit: 700m
+    ports:
+      - "9000:9000"
+    networks:
+      - ecommerce
+    depends_on:
+      - configserver
+      - eurekaserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+        max_attempts: 3
+        window: 120s
+    environment:
+      SPRING_APPLICATION_NAME: users
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8072/eureka/
+    links:
+      - postgresUser
+
+
+  productmanagement:
+    image: oz/products
+    build:
+      context: ../../../productmanagement
+      dockerfile: Dockerfile
+    mem_limit: 700m
+    ports:
+      - "9001:9001"
+    networks:
+      - ecommerce
+    depends_on:
+      - configserver
+      - eurekaserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+        max_attempts: 3
+        window: 120s
+    environment:
+      SPRING_APPLICATION_NAME: products
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8072/eureka/
+    links:
+      - postgresProduct
+
+  ordermanagement:
+    image: oz/oders
+    build:
+      context: ../../../ordermanagement
+      dockerfile: Dockerfile
+    mem_limit: 700m
+    ports:
+      - "9002:9002"
+    networks:
+      - ecommerce
+    depends_on:
+      - configserver
+      - eurekaserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+        max_attempts: 3
+        window: 120s
+    environment:
+      SPRING_APPLICATION_NAME: order
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8072/eureka/
+      MONGODB_URI: mongodb://mongodb:27017/order
+
+    links:
+      - mongodb
+
+
+  postgresUser:
+    container_name: users-db
+    restart: always
+    image: "postgres:13"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=ozkan
+      - POSTGRES_DB=users
+    volumes:
+      - postgres-user-db:/data/postgres
+    ports:
+      - "5432:5432"
+
+  flywayUser:
+    image: flyway/flyway:7.15.0
+    volumes:
+      - ./UserDBMigration:/flyway/sql
+    command: migrate
+    depends_on:
+      - postgresUser
+    environment:
+      - FLYWAY_USER=postgres
+      - FLYWAY_PASSWORD=ozkan
+      - FLYWAY_URL=jdbc:postgresql://postgresUser:5432/users
+      - FLYWAY_SCHEMAS=ecommerce_users_schema
+      - FLYWAY_GROUP=true
+
+  postgresProduct:
+    container_name: products-db
+    restart: always
+    image: "postgres:13"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=ozkan
+      - POSTGRES_DB=products
+    volumes:
+      - postgres-product-db:/data/postgres
+    ports:
+      - "5433:5432"
+
+  flywayProduct:
+    image: flyway/flyway:7.15.0
+    volumes:
+      - ./ProductDBMigration:/flyway/sql
+    command: migrate
+    depends_on:
+      - postgresProduct
+    environment:
+      - FLYWAY_USER=postgres
+      - FLYWAY_PASSWORD=ozkan
+      - FLYWAY_URL=jdbc:postgresql://postgresUser:5432/products
+      - FLYWAY_SCHEMAS=ecommerce_products_schema
+      - FLYWAY_GROUP=true
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: Ozge.Ozkan@adesso.com.tr
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+
+  mongodb:
+    image:  mongo:latest
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=rootuser
+      - MONGO_INITDB_ROOT_PASSWORD=rootpass
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - data:/data
+  mongo-express:
+      image: mongo-express
+      container_name: mexpress
+      environment:
+        - ME_CONFIG_MONGODB_ADMINUSERNAME=rootuser
+        - ME_CONFIG_MONGODB_ADMINPASSWORD=rootpass
+        - ME_CONFIG_MONGODB_URL=mongodb://root:password@mongo:27017/?authSource=admin
+        - ME_CONFIG_MONGODB_SERVER=mongodb
+
+      links:
+        - mongodb
+      restart: unless-stopped
+      ports:
+        - "8088:8081"
+
+networks:
+  ecommerce:
+
+volumes:
+  postgres-user-db:
+    driver: local
+  postgres-product-db:
+    driver: local
+  pgadmin-data:
+  data: {}
+
