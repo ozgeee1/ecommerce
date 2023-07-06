@@ -20,7 +20,7 @@ services:
       dockerfile: Dockerfile
     mem_limit: 700m
     ports:
-      - "8072:8072"
+      - "8761:8761"
     networks:
       - ecommerce
     depends_on:
@@ -36,6 +36,33 @@ services:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
 
+  gatewayserver:
+    image: oz/gatewayserver
+    build:
+      context: ../../../gatewayserver
+      dockerfile: Dockerfile
+    mem_limit: 700m
+    ports:
+      - "8072:8072"
+    networks:
+      - ecommerce
+    depends_on:
+      - configserver
+      - eurekaserver
+      - usermanagement
+      - productmanagement
+      - ordermanagement
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 45s
+        max_attempts: 3
+        window: 180s
+    environment:
+      SPRING_APPLICATION_NAME: gatewayserver
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
 
 
   usermanagement:
@@ -61,7 +88,7 @@ services:
       SPRING_APPLICATION_NAME: users
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8072/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
     links:
       - postgresUser
 
@@ -89,7 +116,7 @@ services:
       SPRING_APPLICATION_NAME: products
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8072/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
     links:
       - postgresProduct
 
@@ -116,7 +143,7 @@ services:
       SPRING_APPLICATION_NAME: order
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8072/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
       MONGODB_URI: mongodb://mongodb:27017/order
 
     links:
