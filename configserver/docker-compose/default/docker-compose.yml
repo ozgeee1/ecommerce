@@ -243,6 +243,15 @@ services:
       ports:
         - "8088:8081"
 
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - cache:/data
+
+
 networks:
   ecommerce:
 
@@ -253,4 +262,6 @@ volumes:
     driver: local
   pgadmin-data:
   data: {}
+  cache:
+    driver: local
 
