@@ -1,7 +1,9 @@
 package com.ecommerce.usermanagement.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
@@ -27,12 +29,8 @@ import java.util.Set;
 @Table(name = "users")
 public class User extends BaseEntity {
 
-
-    @NotBlank(message = "First name can not be blank")
     private String firstName;
 
-
-    @NotBlank(message = "Last name can not be blank")
     private String lastName;
 
 
@@ -44,15 +42,22 @@ public class User extends BaseEntity {
     @Email(message = "Please provide a valid email address" )
     private String email;
 
-    @NotBlank(message="Phone number must not be blank")
     private String phoneNumber;
 
     private LocalDate birthDate;
 
     private Long selectedAddressId;
 
+    private boolean isEmailVerified;
+
+    private boolean isPhoneNumberVerified;
+
     @OneToMany(cascade = CascadeType.ALL,mappedBy = "user")
     private Set<Address> addressSet = new HashSet<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy="user",fetch= FetchType.EAGER)
+    private Set<Authority> authorities;
 
 
     public String getFullName(){
