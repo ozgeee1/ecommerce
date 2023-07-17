@@ -56,7 +56,7 @@ public class User extends BaseEntity {
     private Set<Address> addressSet = new HashSet<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy="user",fetch= FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL,mappedBy="user",fetch= FetchType.EAGER)
     private Set<Authority> authorities;
 
 

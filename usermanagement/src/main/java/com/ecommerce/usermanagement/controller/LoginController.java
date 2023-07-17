@@ -1,5 +1,7 @@
 package com.ecommerce.usermanagement.controller;
 
+import com.ecommerce.usermanagement.config.JwtTokenUtil;
+import com.ecommerce.usermanagement.request.LoginRequest;
 import com.ecommerce.usermanagement.request.SignUpRequest;
 import com.ecommerce.usermanagement.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +18,9 @@ public class LoginController {
 
     private final UserService userService;
 
+
     @PostMapping("user")
-    public ResponseEntity<?> signUpUser(@RequestBody SignUpRequest signUpRequest){
+    public ResponseEntity<?> signUpUser(@RequestBody SignUpRequest signUpRequest) throws Exception {
        return userService.signUpUser(signUpRequest);
     }
 
@@ -25,5 +28,16 @@ public class LoginController {
     public ResponseEntity<?> verifyUserAccount(@RequestParam("code") String code, @RequestParam("userEmail") String userEmail){
         return userService.verifyAccount(code,userEmail);
     }
+
+    @GetMapping("hello")
+    public String sayHello(){
+        return "hello";
+    }
+
+    @PostMapping("login")
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) throws Exception {
+        return userService.loginUser(loginRequest);
+    }
+
 
 }

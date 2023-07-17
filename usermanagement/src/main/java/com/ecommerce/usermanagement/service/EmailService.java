@@ -1,9 +1,7 @@
 package com.ecommerce.usermanagement.service;
 
 import com.ecommerce.usermanagement.domain.ApplicationProperties;
-import com.ecommerce.usermanagement.domain.Constants;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
