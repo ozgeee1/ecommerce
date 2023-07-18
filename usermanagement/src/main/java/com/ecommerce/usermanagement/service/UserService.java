@@ -1,7 +1,6 @@
 package com.ecommerce.usermanagement.service;
 
 import com.ecommerce.usermanagement.config.EcommerceUserDetails;
-import com.ecommerce.usermanagement.config.JwtTokenUtil;
 import com.ecommerce.usermanagement.constants.ApplicationConstants;
 import com.ecommerce.usermanagement.domain.Authority;
 import com.ecommerce.usermanagement.domain.User;
@@ -17,18 +16,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -40,9 +34,6 @@ public class UserService {
 
     private final RedisService redisService;
 
-    private final AuthenticationManager authenticationManager;
-
-    private final JwtTokenUtil jwtTokenUtil;
 
     private final EcommerceUserDetails userDetails;
     
@@ -93,7 +84,7 @@ public class UserService {
         Object value = redisService.get(userEmail);
         User byEmail = getUserByEmail(userEmail);
         boolean verified = false;
-        if (value!=null & code.equals(value)){
+        if (value!=null && code.equals(value)){
             verified=true;
             byEmail.setEmailVerified(true);
             userRepository.save(byEmail);
@@ -112,20 +103,13 @@ public class UserService {
     private void authenticate(String email, String password) throws Exception {
         Objects.requireNonNull(email);
         Objects.requireNonNull(password);
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-        } catch (DisabledException e) {
-            throw new Exception("USER_DISABLED", e);
-        } catch (BadCredentialsException e) {
-            throw new Exception("INVALID_CREDENTIALS", e);
-        }
+
     }
 
     public ResponseEntity<?> loginUser(LoginRequest loginRequest) throws Exception {
         authenticate(loginRequest.getEmail(),loginRequest.getPassword());
         UserDetails uDetails = userDetails.loadUserByUsername(loginRequest.getEmail());
-        final String token = jwtTokenUtil.generateToken(uDetails);
-        return ResponseEntity.ok(token);
+        return ResponseEntity.ok("ok");
     }
 
 

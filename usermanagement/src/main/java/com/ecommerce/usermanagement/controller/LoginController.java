@@ -1,6 +1,5 @@
 package com.ecommerce.usermanagement.controller;
 
-import com.ecommerce.usermanagement.config.JwtTokenUtil;
 import com.ecommerce.usermanagement.request.LoginRequest;
 import com.ecommerce.usermanagement.request.SignUpRequest;
 import com.ecommerce.usermanagement.service.UserService;
