@@ -170,7 +170,7 @@ services:
       DB_ADDR: postgresUser
       DB_DATABASE: users
       DB_USER: postgres
-      DB_SCHEMA: ecommerce_users_schema
+      DB_SCHEMA: public
       DB_PASSWORD: ozkan
       DB_PORT: 5432
       KEYCLOAK_USER: admin
