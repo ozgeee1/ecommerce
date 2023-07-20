@@ -1,11 +1,9 @@
 package com.ecommerce.usermanagement.controller;
 
-import com.ecommerce.usermanagement.config.KeyCloakService;
+import com.ecommerce.usermanagement.service.KeyCloakService;
 
 import com.ecommerce.usermanagement.dto.UserDTO;
 import com.ecommerce.usermanagement.request.SignUpRequest;
-import jakarta.ws.rs.core.Response;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.http.ResponseEntity;

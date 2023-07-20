@@ -50,8 +50,6 @@ services:
       - configserver
       - eurekaserver
       - usermanagement
-      - productmanagement
-      - ordermanagement
     deploy:
       restart_policy:
         condition: on-failure
@@ -78,6 +76,7 @@ services:
     depends_on:
       - configserver
       - eurekaserver
+      - postgres
     deploy:
       restart_policy:
         condition: on-failure
@@ -89,65 +88,16 @@ services:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/users
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ozkan
+      SPRING_FLYWAY_SCHEMAS: ecommerce_users_schema
     links:
       - postgres
+      - keycloak
 
 
-  productmanagement:
-    image: oz/products
-    build:
-      context: ../../../productmanagement
-      dockerfile: Dockerfile
-    mem_limit: 700m
-    ports:
-      - "9001:9001"
-    networks:
-      - ecommerce
-    depends_on:
-      - configserver
-      - eurekaserver
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 15s
-        max_attempts: 3
-        window: 120s
-    environment:
-      SPRING_APPLICATION_NAME: products
-      SPRING_PROFILES_ACTIVE: default
-      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
-    links:
-      - postgres
 
-  ordermanagement:
-    image: oz/oders
-    build:
-      context: ../../../ordermanagement
-      dockerfile: Dockerfile
-    mem_limit: 700m
-    ports:
-      - "9002:9002"
-    networks:
-      - ecommerce
-    depends_on:
-      - configserver
-      - eurekaserver
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 15s
-        max_attempts: 3
-        window: 120s
-    environment:
-      SPRING_APPLICATION_NAME: order
-      SPRING_PROFILES_ACTIVE: default
-      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
-      MONGODB_URI: mongodb://mongodb:27017/order
-
-    links:
-      - mongodb
 
   keycloak:
     image: quay.io/keycloak/keycloak:legacy
@@ -167,6 +117,10 @@ services:
       - "8080:8080"
     depends_on:
       - postgres
+    volumes:
+      - keycloak_data:/opt/jboss/keycloak/standalone/data
+    networks:
+      - ecommerce
 
   flywayUser:
     image: flyway/flyway:7.15.0
@@ -183,7 +137,7 @@ services:
       - FLYWAY_GROUP=true
 
   postgres:
-    container_name: postgres-db
+    container_name: postgres
     restart: always
     image: "postgres:13"
     environment:
@@ -193,9 +147,11 @@ services:
       - POSTGRES_DB=users
       - POSTGRES_DB=keycloak
     volumes:
-      - postgres-db:/data/postgres
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - ecommerce
 
   flywayProduct:
     image: flyway/flyway:7.15.0
@@ -221,51 +177,17 @@ services:
       PGADMIN_DEFAULT_EMAIL: Ozge.Ozkan@adesso.com.tr
       PGADMIN_DEFAULT_PASSWORD: admin
     volumes:
-      - pgadmin-data:/var/lib/pgadmin
-
-
-  mongodb:
-    image:  mongo:latest
-    container_name: mongodb
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=rootuser
-      - MONGO_INITDB_ROOT_PASSWORD=rootpass
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
-    volumes:
-      - data:/data
-  mongo-express:
-      image: mongo-express
-      container_name: mexpress
-      environment:
-        - ME_CONFIG_MONGODB_ADMINUSERNAME=rootuser
-        - ME_CONFIG_MONGODB_ADMINPASSWORD=rootpass
-        - ME_CONFIG_MONGODB_URL=mongodb://root:password@mongo:27017/?authSource=admin
-        - ME_CONFIG_MONGODB_SERVER=mongodb
-
-      links:
-        - mongodb
-      restart: unless-stopped
-      ports:
-        - "8088:8081"
-
-  redis:
-    image: redis:6.2-alpine
-    restart: always
-    ports:
-      - "6379:6379"
-    volumes:
-      - cache:/data
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - ecommerce
 
 
 networks:
   ecommerce:
 
 volumes:
-  pgadmin-data:
+  pgadmin_data:
+  postgres_data:
   data: {}
   cache:
-    driver: local
-  postgres-db:
-    driver: local
+  keycloak_data:

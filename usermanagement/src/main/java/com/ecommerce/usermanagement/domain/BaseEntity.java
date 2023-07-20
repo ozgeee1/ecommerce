@@ -20,8 +20,8 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
+@MappedSuperclass
 public class BaseEntity {
 
     @Id

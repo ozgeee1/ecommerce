@@ -1,5 +1,6 @@
-package com.ecommerce.usermanagement.config;
+package com.ecommerce.usermanagement.service;
 
+import com.ecommerce.usermanagement.config.KeycloakProvider;
 import com.ecommerce.usermanagement.domain.Credentials;
 import com.ecommerce.usermanagement.domain.User;
 import com.ecommerce.usermanagement.dto.UserDTO;
@@ -16,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -55,7 +56,10 @@ public class KeyCloakService {
         String userUrl = response.getLocation().toString();
         String userId = userUrl.substring(userUrl.lastIndexOf("/") + 1);
         sendVerificationLink(userId);
-        userRepository.save(newUser);
+        newUser.setCreated_at(LocalDateTime.now());
+        User save = userRepository.save(newUser);
+        System.out.println(save.toString());
+
         return ResponseEntity.ok("To complete sign up process please verify your email!");
     }
 
@@ -97,7 +101,7 @@ public class KeyCloakService {
         UsersResource usersResource = getInstance();
 
         usersResource.get(userId)
-                .executeActionsEmail(Arrays.asList("UPDATE_PASSWORD"));
+                .executeActionsEmail(List.of("UPDATE_PASSWORD"));
     }
 
     public UsersResource getInstance(){
