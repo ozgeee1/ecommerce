@@ -10,7 +10,6 @@ CREATE TABLE users (
     phone_number varchar(11),
     birth_date DATE ,
     selected_address_Id bigint,
-    is_email_verified BOOLEAN NOT NULL,
     is_phone_number_verified BOOLEAN NOT NULL,
 
     primary key(id)

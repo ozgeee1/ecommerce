@@ -90,7 +90,7 @@ services:
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
     links:
-      - postgresUser
+      - postgres
 
 
   productmanagement:
@@ -118,7 +118,7 @@ services:
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
     links:
-      - postgresProduct
+      - postgres
 
   ordermanagement:
     image: oz/oders
@@ -149,26 +149,12 @@ services:
     links:
       - mongodb
 
-
-  postgresUser:
-    container_name: users-db
-    restart: always
-    image: "postgres:13"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=ozkan
-      - POSTGRES_DB=users
-    volumes:
-      - postgres-user-db:/data/postgres
-    ports:
-      - "5432:5432"
-
   keycloak:
     image: quay.io/keycloak/keycloak:legacy
     environment:
       DB_VENDOR: POSTGRES
-      DB_ADDR: postgresUser
-      DB_DATABASE: users
+      DB_ADDR: postgres
+      DB_DATABASE: keycloak
       DB_USER: postgres
       DB_SCHEMA: public
       DB_PASSWORD: ozkan
@@ -180,10 +166,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - postgresUser
-
-
-
+      - postgres
 
   flywayUser:
     image: flyway/flyway:7.15.0
@@ -191,26 +174,28 @@ services:
       - ./UserDBMigration:/flyway/sql
     command: migrate
     depends_on:
-      - postgresUser
+      - postgres
     environment:
       - FLYWAY_USER=postgres
       - FLYWAY_PASSWORD=ozkan
-      - FLYWAY_URL=jdbc:postgresql://postgresUser:5432/users
+      - FLYWAY_URL=jdbc:postgresql://postgres:5432/users
       - FLYWAY_SCHEMAS=ecommerce_users_schema
       - FLYWAY_GROUP=true
 
-  postgresProduct:
-    container_name: products-db
+  postgres:
+    container_name: postgres-db
     restart: always
     image: "postgres:13"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=ozkan
       - POSTGRES_DB=products
+      - POSTGRES_DB=users
+      - POSTGRES_DB=keycloak
     volumes:
-      - postgres-product-db:/data/postgres
+      - postgres-db:/data/postgres
     ports:
-      - "5433:5432"
+      - "5432:5432"
 
   flywayProduct:
     image: flyway/flyway:7.15.0
@@ -218,11 +203,11 @@ services:
       - ./ProductDBMigration:/flyway/sql
     command: migrate
     depends_on:
-      - postgresProduct
+      - postgres
     environment:
       - FLYWAY_USER=postgres
       - FLYWAY_PASSWORD=ozkan
-      - FLYWAY_URL=jdbc:postgresql://postgresUser:5432/products
+      - FLYWAY_URL=jdbc:postgresql://postgres:5432/products
       - FLYWAY_SCHEMAS=ecommerce_products_schema
       - FLYWAY_GROUP=true
 
@@ -278,12 +263,9 @@ networks:
   ecommerce:
 
 volumes:
-  postgres-user-db:
-    driver: local
-  postgres-product-db:
-    driver: local
   pgadmin-data:
   data: {}
   cache:
     driver: local
-
+  postgres-db:
+    driver: local

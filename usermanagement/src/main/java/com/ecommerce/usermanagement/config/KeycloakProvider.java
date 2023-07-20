@@ -20,8 +20,8 @@ public class KeycloakProvider {
     @Value("${keycloak.credentials.secret}")
     public String clientSecret;
 
-    final static String userName = "admin";
-    final static String password = "admin";
+    final  String userName = "admin";
+    final  String password = "admin";
 
     private static Keycloak keycloak = null;
 

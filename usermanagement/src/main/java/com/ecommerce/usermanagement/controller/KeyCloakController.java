@@ -3,6 +3,7 @@ package com.ecommerce.usermanagement.controller;
 import com.ecommerce.usermanagement.config.KeyCloakService;
 
 import com.ecommerce.usermanagement.dto.UserDTO;
+import com.ecommerce.usermanagement.request.SignUpRequest;
 import jakarta.ws.rs.core.Response;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -21,15 +22,14 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(path = "api/user")
+@RequestMapping(path = "user")
 public class KeyCloakController {
 
     private final KeyCloakService service;
 
     @PostMapping
-    public ResponseEntity<Integer> addUser(@RequestBody UserDTO userDTO){
-        int i = service.addUser(userDTO);
-        return ResponseEntity.ok(i);
+    public ResponseEntity<?> addUser(@RequestBody SignUpRequest signUpRequest){
+        return service.addUser(signUpRequest);
     }
 
     @GetMapping(path = "/{userName}")
@@ -49,12 +49,6 @@ public class KeyCloakController {
     public String deleteUser(@PathVariable("userId") String userId){
         service.deleteUser(userId);
         return "User Deleted Successfully.";
-    }
-
-    @GetMapping(path = "/verification-link/{userId}")
-    public String sendVerificationLink(@PathVariable("userId") String userId){
-        service.sendVerificationLink(userId);
-        return "Verification Link Send to Registered E-mail Id.";
     }
 
     @GetMapping(path = "/reset-password/{userId}")

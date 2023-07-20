@@ -1,15 +1,19 @@
 package com.ecommerce.usermanagement.config;
 
 import com.ecommerce.usermanagement.domain.Credentials;
+import com.ecommerce.usermanagement.domain.User;
 import com.ecommerce.usermanagement.dto.UserDTO;
+import com.ecommerce.usermanagement.error.ApiError;
+import com.ecommerce.usermanagement.repository.UserRepository;
+import com.ecommerce.usermanagement.request.SignUpRequest;
 import jakarta.ws.rs.core.Response;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -27,30 +31,34 @@ public class KeyCloakService {
 
     private final KeycloakProvider kcProvider;
 
-    public int addUser(UserDTO userDTO){
+    private final UserRepository userRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
+    public ResponseEntity<?> addUser(SignUpRequest signUpRequest){
         CredentialRepresentation credential = Credentials
-                .createPasswordCredentials(userDTO.getPassword());
+                .createPasswordCredentials(signUpRequest.getPassword());
         UserRepresentation user = new UserRepresentation();
-        user.setUsername(userDTO.getUserName());
-        user.setFirstName(userDTO.getFirstName());
-        user.setLastName(userDTO.getLastName());
-        user.setEmail(userDTO.getEmailId());
+        user.setEmail(signUpRequest.getEmail());
         user.setCredentials(Collections.singletonList(credential));
         user.setEnabled(true);
 
         UsersResource instance = getInstance();
         Response response = instance.create(user);
-        int a =5 ;
-        return response.getStatus();
+        if(response.getStatus()!=201){
+            ApiError apiError = ApiError.builder().statusCode(response.getStatus()).message(response.getStatusInfo().getReasonPhrase())
+                    .build();
+            return ResponseEntity.ok(apiError);
+        }
+        User newUser = User.builder().email(signUpRequest.getEmail())
+                .password(passwordEncoder.encode(signUpRequest.getPassword())).build();
+        String userUrl = response.getLocation().toString();
+        String userId = userUrl.substring(userUrl.lastIndexOf("/") + 1);
+        sendVerificationLink(userId);
+        userRepository.save(newUser);
+        return ResponseEntity.ok("To complete sign up process please verify your email!");
     }
 
-    private static CredentialRepresentation createPasswordCredentials(String password) {
-        CredentialRepresentation passwordCredentials = new CredentialRepresentation();
-        passwordCredentials.setTemporary(false);
-        passwordCredentials.setType(CredentialRepresentation.PASSWORD);
-        passwordCredentials.setValue(password);
-        return passwordCredentials;
-    }
 
     public List<UserRepresentation> getUser(String userName){
         UsersResource usersResource = getInstance();
