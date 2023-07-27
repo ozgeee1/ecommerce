@@ -33,8 +33,6 @@ public class User extends BaseEntity {
 
     private String lastName;
 
-    private String password;
-
     private String email;
 
     private String phoneNumber;
