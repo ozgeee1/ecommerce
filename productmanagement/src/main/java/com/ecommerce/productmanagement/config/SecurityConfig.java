@@ -1,14 +1,11 @@
-package com.ecommerce.usermanagement.config;
+package com.ecommerce.productmanagement.config;
 
-import com.ecommerce.usermanagement.filter.KeycloakTokenFilter;
+import com.ecommerce.productmanagement.filter.KeycloakTokenFilter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.keycloak.adapters.KeycloakConfigResolver;
-import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
-import org.keycloak.adapters.springsecurity.KeycloakConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,9 +15,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -28,12 +22,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import java.io.OutputStream;
 
 @Configuration
-@KeycloakConfiguration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 @Slf4j
 @RequiredArgsConstructor
-public class KeycloakConfig  {
+public class SecurityConfig {
 
     private final KeycloakTokenFilter tokenFilter;
 
@@ -55,25 +48,19 @@ public class KeycloakConfig  {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("Bean oluştu");
-
         http.csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling((exceptionHandling) ->
-                exceptionHandling
-                        .authenticationEntryPoint(authenticationEntryPoint()))
+                        exceptionHandling
+                                .authenticationEntryPoint(authenticationEntryPoint()))
                 .sessionManagement((sessionManagement) ->
                         sessionManagement
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(e->e.requestMatchers("/user").permitAll())
-                .authorizeHttpRequests(e -> e.requestMatchers("/user/**","/address/**").authenticated())
+                .authorizeHttpRequests(e->e.requestMatchers(HttpMethod.GET, "/product").permitAll())
+                .authorizeHttpRequests(e -> e.requestMatchers("/product/**","/category/**","/inventory/**").hasRole("ADMIN"))
 
                 .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
 
 
-
         return http.build();
     }
-
-
-
 }

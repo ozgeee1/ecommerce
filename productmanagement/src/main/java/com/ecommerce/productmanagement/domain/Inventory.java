@@ -2,24 +2,19 @@ package com.ecommerce.productmanagement.domain;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
-import java.time.LocalDateTime;
-
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Data
 @Entity
 @Table(name = "inventory")
 public class Inventory extends BaseEntity{
 
+    @NotNull
     private int productQuantity;
 
+    @NotNull
     private Long productId;
+
 }

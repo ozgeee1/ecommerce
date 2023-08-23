@@ -2,36 +2,27 @@ package com.ecommerce.productmanagement.domain;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 
 @Data
-@NoArgsConstructor
-@Builder
 @Entity
 @Table(name = "products")
 public class Product extends BaseEntity{
 
 
-    @NotBlank
+    @NotNull
     private BigDecimal price;
-
-    @NotBlank
-    private String brand;
 
     @NotBlank
     private String description;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "category_id",referencedColumnName = "id")
     private Category category;
 

@@ -3,7 +3,6 @@ package com.ecommerce.usermanagement.mapper;
 import com.ecommerce.usermanagement.domain.Address;
 import com.ecommerce.usermanagement.request.AddressRequest;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValueCheckStrategy;
 import org.mapstruct.NullValuePropertyMappingStrategy;
